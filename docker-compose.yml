@@ -1,0 +1,62 @@
+version: '3.8'
+services:
+    redis:
+        image: redis:6.0-alpine
+        restart: "unless-stopped"
+        environment:
+            - REDIS_HOST
+        volumes:
+            - "redis_config:/usr/local/etc/redis"
+            - "redis_data:/data"
+        command: "redis-server /usr/local/etc/redis/redis.conf"
+    db:
+        image: postgres:13-alpine
+        restart: "unless-stopped"
+        environment:
+            POSTGRES_USER: ${DB_USER}
+            POSTGRES_PASSWORD: ${DB_PASS}
+            POSTGRES_DB: ${DB_NAME}
+        volumes:
+            - "postgres_data:/var/lib/postgresql/data"
+    db_migration:
+        build: .
+        restart: "on-failure"
+        depends_on:
+            -   db
+        environment:
+            -   DB_HOST
+            -   DB_PORT
+            -   DB_NAME
+            -   DB_USER
+            -   DB_PASS
+        command: sh -c "python -m alembic upgrade head"
+    bot:
+        build: .
+        stop_signal: SIGINT
+        restart: "unless-stopped"
+        env_file: .env
+        depends_on:
+            - db
+            - db_migration
+            - redis
+
+
+volumes:
+    postgres_data:
+        driver: local
+        driver_opts:
+            type: 'none'
+            o: 'bind'
+            device: './pg-data'
+    redis_config:
+        driver: local
+        driver_opts:
+            type: 'none'
+            o: 'bind'
+            device: './redis-config'
+    redis_data:
+        driver: local
+        driver_opts:
+            type: 'none'
+            o: 'bind'
+            device: './redis-data'

@@ -1,0 +1,8 @@
+/.env
+/poetry.lock
+/.idea
+
+__pycache__/
+/pg-data/
+/redis-config/
+/redis-data/
