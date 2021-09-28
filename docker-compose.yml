@@ -5,9 +5,10 @@ services:
         restart: "unless-stopped"
         environment:
             - REDIS_HOST
+            - VOLUMES_DIR
         volumes:
-            - "redis_config:/usr/local/etc/redis"
-            - "redis_data:/data"
+            - "~/${VOLUMES_DIR}/redis-config:/usr/local/etc/redis"
+            - "~/${VOLUMES_DIR}/redis-data:/data"
         command: "redis-server /usr/local/etc/redis/redis.conf"
     db:
         image: postgres:13-alpine
@@ -16,8 +17,9 @@ services:
             POSTGRES_USER: ${DB_USER}
             POSTGRES_PASSWORD: ${DB_PASS}
             POSTGRES_DB: ${DB_NAME}
+            VOLUMES_DIR: ${VOLUMES_DIR}
         volumes:
-            - "postgres_data:/var/lib/postgresql/data"
+            - "~/${VOLUMES_DIR}/pg-data:/var/lib/postgresql/data"
     db_migration:
         build: .
         restart: "on-failure"
@@ -39,24 +41,3 @@ services:
             - db
             - db_migration
             - redis
-
-
-volumes:
-    postgres_data:
-        driver: local
-        driver_opts:
-            type: 'none'
-            o: 'bind'
-            device: './pg-data'
-    redis_config:
-        driver: local
-        driver_opts:
-            type: 'none'
-            o: 'bind'
-            device: './redis-config'
-    redis_data:
-        driver: local
-        driver_opts:
-            type: 'none'
-            o: 'bind'
-            device: './redis-data'
