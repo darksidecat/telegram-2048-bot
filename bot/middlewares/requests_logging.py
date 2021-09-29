@@ -3,7 +3,7 @@ from typing import Awaitable, Callable, Optional, TypeVar
 
 from aiogram import Bot
 from aiogram.dispatcher.fsm.storage.base import BaseStorage
-from aiogram.methods import Response, SendMessage, TelegramMethod
+from aiogram.methods import GetUpdates, Response, SendMessage, TelegramMethod
 from aiogram.types import Chat, Message, User
 
 logger = logging.getLogger(__name__)
@@ -12,12 +12,15 @@ T = TypeVar("T")
 
 
 class RequestLogging:
+    def __init__(self, ignore_get_updates: bool = True):
+        self.ignore_get_updates = ignore_get_updates
+
     async def __call__(
         self,
         bot: Bot,
         method: TelegramMethod[T],
         make_request: Callable[[Bot, TelegramMethod[T]], Awaitable[Response[T]]],
     ):
-
-        logger.info("Make request. Method: %s", type(method).__name__)
+        if not self.ignore_get_updates or not isinstance(method, GetUpdates):
+            logger.info("Make request. Method: %s", type(method).__name__)
         return await make_request(bot, method)

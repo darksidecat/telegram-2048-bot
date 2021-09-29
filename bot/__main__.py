@@ -56,7 +56,7 @@ async def main():
     bot = Bot(config.bot.token)
     dp = Dispatcher(storage=storage, isolate_events=True)
 
-    bot.session.middleware(RequestLogging())
+    bot.session.middleware(RequestLogging(ignore_get_updates=True))
     dp.message.outer_middleware(DBSession(session_fabric))
     dp.callback_query.outer_middleware(DBSession(session_fabric))
 
@@ -67,11 +67,11 @@ async def main():
         await set_commands(bot)
         await bot.get_updates(offset=-1)
         await dp.start_polling(bot)
-    except (KeyboardInterrupt, SystemExit):
-        logger.warning("Bot stopped")
     finally:
         await bot.session.close()
         await storage.close()
 
-
-asyncio.run(main())
+try:
+    asyncio.run(main())
+except (KeyboardInterrupt, SystemExit):
+    logger.warning("Exit")
