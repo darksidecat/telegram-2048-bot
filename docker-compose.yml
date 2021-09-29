@@ -41,3 +41,5 @@ services:
             - db
             - db_migration
             - redis
+        logging:
+            driver: journald
