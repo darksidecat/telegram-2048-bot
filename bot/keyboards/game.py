@@ -5,6 +5,8 @@ from aiogram.dispatcher.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import KeyboardBuilder
 
+GAME_SIZES = ['4', '5', '6', '7']
+
 
 class GameAction(str, Enum):
     PASS = "PASS"
@@ -60,10 +62,10 @@ class GameSizeCD(CallbackData, prefix="game_size"):
 
 def game_size():
     keyboard = KeyboardBuilder(button_type=InlineKeyboardButton)
-    for i in range(4, 8):
+    for size in GAME_SIZES:
         keyboard.add(
             InlineKeyboardButton(
-                text=f"{i}X{i}", callback_data=GameSizeCD(size=i).pack()
+                text=f"{size}X{size}", callback_data=GameSizeCD(size=size).pack()
             )
         )
 

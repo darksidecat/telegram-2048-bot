@@ -1,11 +1,12 @@
 from typing import List, Optional
 
 from aiogram import Dispatcher, html, types
-from aiogram.dispatcher.filters import Command, ContentTypesFilter
+from aiogram.dispatcher.filters import Command, ContentTypesFilter, CommandObject
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.db import GameHistoryEntry
+from bot.keyboards.game import GAME_SIZES
 
 
 async def stats(message: types.Message, session: AsyncSession):
@@ -23,17 +24,23 @@ async def stats(message: types.Message, session: AsyncSession):
     if top_scores:
         text = "\n".join(
             [
-                f"{i+1}: {g.field_size}X{g.field_size} - {g.played_at.date()}: {g.score}"
+                f"{i+1} | {g.field_size}X{g.field_size} | {g.played_at.date()} | {g.score}"
                 for i, g in enumerate(top_scores)
             ]
         )
         await message.answer(html.pre(text), parse_mode="HTML")
 
 
-async def stats_all(message: types.Message, session: AsyncSession):
+async def stats_all(message: types.Message, session: AsyncSession, command: CommandObject):
+    game_size = None
+    if command.args:
+        if command.args[0] in GAME_SIZES:
+            game_size = int(command.args[0])
+
     async with session.begin():
         query = (
             select(GameHistoryEntry)
+            .filter(True if not game_size else (GameHistoryEntry.field_size == game_size))
             .order_by(GameHistoryEntry.score.desc())
             .limit(9)
         )
@@ -52,7 +59,7 @@ async def stats_all(message: types.Message, session: AsyncSession):
     if top_scores:
         top_games = []
         for i, game in enumerate(top_scores):
-            user = 'You' if game.telegram_id == message.from_user.id else 'XXX'
+            user = 'You' if game.telegram_id == message.from_user.id else '---'
             fields = [i+1, user, f'{game.field_size}X{game.field_size}', game.played_at.date(), game.score]
             top_games.append(" | ".join(map(str, fields)))
 
