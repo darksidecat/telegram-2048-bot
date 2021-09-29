@@ -5,7 +5,7 @@ from aiogram.dispatcher.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import KeyboardBuilder
 
-GAME_SIZES = ['4', '5', '6', '7']
+GAME_SIZES = ["4", "5", "6", "7"]
 
 
 class GameAction(str, Enum):

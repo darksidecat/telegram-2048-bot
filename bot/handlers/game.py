@@ -20,7 +20,7 @@ def render_field(game: Game):
     cells_size = len(game.field)
     table.set_cols_width([3] * cells_size)
     table.set_cols_align(["c"] * cells_size)
-    table.set_cols_dtype([lambda x: ' ' if x == 0 else str(x)] * cells_size)
+    table.set_cols_dtype([lambda x: " " if x == 0 else str(x)] * cells_size)
     table.add_rows(game.field, header=False)
 
     return f"<code>{table.draw()}\n\nscore: {game.score}</code>"
