@@ -7,23 +7,16 @@ from aiogram import Dispatcher, types
 from aiogram.dispatcher.filters import Command, ContentTypesFilter
 from aiogram.dispatcher.fsm.context import FSMContext
 from sqlalchemy.ext.asyncio import AsyncSession
-from texttable import Texttable
 
 from bot import keyboards
 from bot.db import GameHistoryEntry
 from bot.game import FieldNotModified, Game
 from bot.keyboards.game import GameAction, GameCD, GameSizeCD
+from bot.utils import draw_table
 
 
 def render_field(game: Game):
-    table = Texttable()
-    cells_size = len(game.field)
-    table.set_cols_width([3] * cells_size)
-    table.set_cols_align(["c"] * cells_size)
-    table.set_cols_dtype([lambda x: " " if x == 0 else str(x)] * cells_size)
-    table.add_rows(game.field, header=False)
-
-    return f"<code>{table.draw()}\n\nscore: {game.score}</code>"
+    return f"<code>{draw_table(game.field)}\n\nscore: {game.score}</code>"
 
 
 async def start(message: types.Message):

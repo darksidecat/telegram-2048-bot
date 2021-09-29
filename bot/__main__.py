@@ -71,6 +71,7 @@ async def main():
         await bot.session.close()
         await storage.close()
 
+
 try:
     asyncio.run(main())
 except (KeyboardInterrupt, SystemExit):
