@@ -12,6 +12,7 @@ from bot.db.utils import make_connection_string
 from bot.handlers.game import register_game
 from bot.handlers.stats import register_stats
 from bot.middlewares.db_session import DBSession
+from bot.middlewares.requests_logging import RequestLogging
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +56,7 @@ async def main():
     bot = Bot(config.bot.token)
     dp = Dispatcher(storage=storage, isolate_events=True)
 
+    bot.session.middleware(RequestLogging())
     dp.message.outer_middleware(DBSession(session_fabric))
     dp.callback_query.outer_middleware(DBSession(session_fabric))
 
