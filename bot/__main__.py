@@ -26,6 +26,10 @@ async def set_commands(bot: Bot):
             command="stats",
             description="Show personal statistics",
         ),
+        BotCommand(
+            command="stats_all",
+            description="Show total statistics",
+        ),
     ]
 
     await bot.set_my_commands(commands=commands, scope=BotCommandScopeDefault())

@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from aiogram import Dispatcher, html, types
 from aiogram.dispatcher.filters import Command, ContentTypesFilter
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.db import GameHistoryEntry
@@ -30,6 +30,36 @@ async def stats(message: types.Message, session: AsyncSession):
         await message.answer(html.pre(text), parse_mode="HTML")
 
 
+async def stats_all(message: types.Message, session: AsyncSession):
+    async with session.begin():
+        query = (
+            select(GameHistoryEntry)
+            .order_by(GameHistoryEntry.score.desc())
+            .limit(9)
+        )
+        result = await session.execute(query)
+        top_scores: Optional[List[GameHistoryEntry]] = result.scalars().all()
+
+        query = (
+            select(func.count()).select_from(
+                select(GameHistoryEntry)
+                .distinct(GameHistoryEntry.telegram_id).subquery()
+            )
+        )
+        result = await session.execute(query)
+        players = result.scalar()
+
+    if top_scores:
+        top_games = []
+        for i, game in enumerate(top_scores):
+            user = 'You' if game.telegram_id == message.from_user.id else 'XXX'
+            fields = [i+1, user, f'{game.field_size}X{game.field_size}', game.played_at.date(), game.score]
+            top_games.append(" | ".join(map(str, fields)))
+
+        text = f"Players: {players}\n\n" + "\n".join(top_games)
+        await message.answer(html.pre(text), parse_mode="HTML")
+
+
 def register_stats(dp: Dispatcher):
     dp.message.register(
         stats,
@@ -37,6 +67,15 @@ def register_stats(dp: Dispatcher):
         Command(
             commands={
                 "stats",
+            }
+        ),
+    )
+    dp.message.register(
+        stats_all,
+        ContentTypesFilter(content_types="text"),
+        Command(
+            commands={
+                "stats_all",
             }
         ),
     )
