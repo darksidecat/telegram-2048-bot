@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from aiogram import Bot, Dispatcher
+from aiogram import Bot, Dispatcher, F
 from aiogram.dispatcher.fsm.storage.redis import RedisStorage
 from aiogram.types import BotCommand, BotCommandScopeDefault
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -60,13 +60,16 @@ async def main():
     dp.message.outer_middleware(DBSession(session_fabric))
     dp.callback_query.outer_middleware(DBSession(session_fabric))
 
+    dp.message.filter(F.chat.type == 'private')
+    dp.callback_query.filter(F.message.chat.type == 'private')
+
     register_game(dp=dp)
     register_stats(dp=dp)
 
     try:
         await set_commands(bot)
         await bot.get_updates(offset=-1)
-        await dp.start_polling(bot)
+        await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
     finally:
         await bot.session.close()
         await storage.close()
