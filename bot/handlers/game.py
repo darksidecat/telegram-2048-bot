@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot import keyboards
 from bot.db import GameHistoryEntry
-from bot.game import FieldNotModified, Game
+from bot.game import Direction, FieldNotModified, Game
 from bot.keyboards.game import GameAction, GameCD, GameSizeCD
 from bot.utils import draw_table
 
@@ -81,13 +81,13 @@ async def move(
 
     try:
         if callback_data.action == GameAction.LEFT:
-            game.move_left()
+            game.move(Direction.LEFT)
         elif callback_data.action == GameAction.UP:
-            game.move_up()
+            game.move(Direction.UP)
         elif callback_data.action == GameAction.RIGHT:
-            game.move_right()
+            game.move(Direction.RIGHT)
         elif callback_data.action == GameAction.DOWN:
-            game.move_down()
+            game.move(Direction.DOWN)
         else:
             await query.answer(cache_time=3)
             return

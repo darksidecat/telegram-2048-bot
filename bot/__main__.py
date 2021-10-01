@@ -60,8 +60,8 @@ async def main():
     dp.message.outer_middleware(DBSession(session_fabric))
     dp.callback_query.outer_middleware(DBSession(session_fabric))
 
-    dp.message.filter(F.chat.type == 'private')
-    dp.callback_query.filter(F.message.chat.type == 'private')
+    dp.message.filter(F.chat.type == "private")
+    dp.callback_query.filter(F.message.chat.type == "private")
 
     register_game(dp=dp)
     register_stats(dp=dp)

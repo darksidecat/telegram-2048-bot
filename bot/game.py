@@ -1,14 +1,22 @@
 import random
+from enum import Enum, auto
 from typing import List
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, root_validator, validator
 
 NEW_FIELD_MIN = 2
 NEW_FIELD_MAX = 4
 NEW_FIELD_MIN_CHANCE = 0.9
 
 DEFAULT_FIELD_SIZE = 4
+
+
+class Direction(Enum):
+    LEFT = auto()
+    UP = auto()
+    RIGHT = auto()
+    DOWN = auto()
 
 
 class GameException(Exception):
@@ -29,6 +37,13 @@ class Game(BaseModel):
     def default_field(cls, v, *, values, **kwargs):
         size = values["size"]
         return v or [[0] * size for _ in range(size)]
+
+    @root_validator
+    def check_field_size_match(cls, values):
+        size, field = values.get("size"), values.get("field")
+        if size != len(field):
+            raise ValueError("field doesnt match size")
+        return values
 
     def start_game(self, fill_cells: int = 2):
         for _ in range(fill_cells):
@@ -63,6 +78,8 @@ class Game(BaseModel):
 
     def _new_cell(self):
         empty = self.empty_cells
+        if not empty:
+            raise FieldNotModified("There is no empty cells for new value")
 
         value = (
             NEW_FIELD_MAX if random.random() >= NEW_FIELD_MIN_CHANCE else NEW_FIELD_MIN
@@ -91,50 +108,45 @@ class Game(BaseModel):
     def _rotate(self):
         self.field = [list(row) for row in zip(*reversed(self.field))]
 
-    def move_left(self):
-        field_copy = self.field.copy()
+    def _left(self):
         self._shift()
         self._merge()
-        if field_copy != self.field:
-            self._new_cell()
+
+    def _up(self):
+        self._rotate()
+        self._rotate()
+        self._rotate()
+        self._shift()
+        self._merge()
+        self._rotate()
+
+    def _right(self):
+        self._rotate()
+        self._rotate()
+        self._shift()
+        self._merge()
+        self._rotate()
+        self._rotate()
+
+    def _down(self):
+        self._rotate()
+        self._shift()
+        self._merge()
+        self._rotate()
+        self._rotate()
+        self._rotate()
+
+    def move(self, direction: Direction):
+        field_copy = self.field.copy()
+
+        if direction is Direction.LEFT:
+            self._left()
+        elif direction is Direction.UP:
+            self._up()
+        elif direction is Direction.RIGHT:
+            self._right()
         else:
-            raise FieldNotModified
-
-    def move_up(self):
-        field_copy = self.field.copy()
-        self._rotate()
-        self._rotate()
-        self._rotate()
-        self._shift()
-        self._merge()
-        self._rotate()
-        if field_copy != self.field:
-            self._new_cell()
-        else:
-            raise FieldNotModified
-
-    def move_right(self):
-        field_copy = self.field.copy()
-        self._rotate()
-        self._rotate()
-        self._shift()
-        self._merge()
-        self._rotate()
-        self._rotate()
-        if field_copy != self.field:
-            self._new_cell()
-        else:
-            raise FieldNotModified
-
-    def move_down(self):
-        field_copy = self.field.copy()
-
-        self._rotate()
-        self._shift()
-        self._merge()
-        self._rotate()
-        self._rotate()
-        self._rotate()
+            self._down()
 
         if field_copy != self.field:
             self._new_cell()
