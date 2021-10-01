@@ -1,6 +1,6 @@
 import random
 from enum import Enum, auto
-from typing import List
+from typing import List, Tuple
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, Field, root_validator, validator
@@ -24,7 +24,7 @@ class GameException(Exception):
 
 
 class FieldNotModified(GameException):
-    pass
+    """Game field not modified"""
 
 
 class Game(BaseModel):
@@ -50,7 +50,9 @@ class Game(BaseModel):
             self._new_cell()
 
     @property
-    def empty_cells(self):
+    def empty_cells(self) -> List[Tuple[int, int]]:
+        """Return List[(y, x)] coordinates of empty cells"""
+
         empty = []
         for i_y, y in enumerate(self.field):
             for i_x, x in enumerate(y):
@@ -59,24 +61,23 @@ class Game(BaseModel):
         return empty
 
     @property
-    def game_over(self):
+    def game_over(self) -> bool:
+        """Game over status, if game can`t be continued return True, otherwise False"""
+
         if not self.empty_cells:
-            for i_y, y in enumerate(self.field):
-                for i_x, x in enumerate(y):
-                    if i_x < self.size - 1 and x == self.field[i_y][i_x + 1]:
-                        return False
-
             rotated_field = [list(row) for row in zip(*reversed(self.field))]
-            for i_y, y in enumerate(rotated_field):
-                for i_x, x in enumerate(y):
-                    if i_x < self.size - 1 and x == rotated_field[i_y][i_x + 1]:
-                        return False
-
+            for field in (self.field, rotated_field):
+                for i_y, y in enumerate(field):
+                    for i_x, x in enumerate(y):
+                        if i_x < self.size - 1 and x == field[i_y][i_x + 1]:
+                            return False
             return True
         else:
             return False
 
     def _new_cell(self):
+        """Create new cell, if cell can`t be created raise FieldNotModified"""
+
         empty = self.empty_cells
         if not empty:
             raise FieldNotModified("There is no empty cells for new value")
@@ -88,12 +89,16 @@ class Game(BaseModel):
         self.field[cell[0]][cell[1]] = value
 
     def _shift(self):
+        """Shift non-zero values to left border"""
+
         for i_row, row in enumerate(self.field):
             row = [i for i in row if i != 0]
             row.extend([0] * (self.size - len(row)))
             self.field[i_row] = row
 
     def _merge(self):
+        """Merge equal neighbor values"""
+
         for i_y, y in enumerate(self.field):
             for i_x, x in enumerate(y):
                 if x == 0:
@@ -106,6 +111,8 @@ class Game(BaseModel):
             self._shift()
 
     def _rotate(self):
+        """Rotate game field by 90 degrees"""
+
         self.field = [list(row) for row in zip(*reversed(self.field))]
 
     def _left(self):
