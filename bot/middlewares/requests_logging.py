@@ -22,5 +22,9 @@ class RequestLogging:
         make_request: Callable[[Bot, TelegramMethod[T]], Awaitable[Response[T]]],
     ):
         if not self.ignore_get_updates or not isinstance(method, GetUpdates):
-            logger.info("Make request. Method: %s", type(method).__name__)
+            logger.info(
+                "Make request with method=%s by bot id=%d",
+                method.__class__.__name__,
+                bot.id,
+            )
         return await make_request(bot, method)

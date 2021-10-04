@@ -6,6 +6,7 @@ from uuid import UUID
 from aiogram import Dispatcher, types
 from aiogram.dispatcher.filters import Command, ContentTypesFilter
 from aiogram.dispatcher.fsm.context import FSMContext
+from aiogram.exceptions import TelegramRetryAfter
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot import keyboards
@@ -95,11 +96,24 @@ async def move(
         await query.answer()
         return
 
-    await query.message.edit_text(
-        text=render_field(game),
-        reply_markup=keyboards.game.game_buttons(game.game_id),
-        parse_mode="HTML",
-    )
+    try:
+        await query.message.edit_text(
+            text=render_field(game),
+            reply_markup=keyboards.game.game_buttons(game.game_id),
+            parse_mode="HTML",
+        )
+    except TelegramRetryAfter as ex:
+        """
+        There is limits for editing messages in chat
+        - small messages (<512 bytes) >200 edits in minute
+        - bigger messages (>512 bytes) ~20 edits in minute
+
+        4-5 game size is small messages, 6-7 is bigger messages
+        """
+        await query.message.answer(
+            text=f"Sorry, bot in Flood Control, please wait {ex.retry_after} seconds or play 4-5 game sizes :("
+        )
+        raise
 
     await state.update_data(game=game.json())
     await query.answer()

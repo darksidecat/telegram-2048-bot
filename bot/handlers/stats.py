@@ -1,7 +1,8 @@
 from typing import List, Optional
 
 from aiogram import Dispatcher, html, types
-from aiogram.dispatcher.filters import Command, CommandObject, ContentTypesFilter
+from aiogram.dispatcher.filters import (Command, CommandObject,
+                                        ContentTypesFilter)
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
