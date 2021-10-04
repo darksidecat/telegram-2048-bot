@@ -1,10 +1,8 @@
 import logging
-from typing import Awaitable, Callable, Optional, TypeVar
+from typing import Awaitable, Callable, TypeVar
 
 from aiogram import Bot
-from aiogram.dispatcher.fsm.storage.base import BaseStorage
-from aiogram.methods import GetUpdates, Response, SendMessage, TelegramMethod
-from aiogram.types import Chat, Message, User
+from aiogram.methods import GetUpdates, Response, TelegramMethod
 
 logger = logging.getLogger(__name__)
 
