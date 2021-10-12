@@ -10,7 +10,7 @@ from bot.keyboards.game import GAME_SIZES
 from bot.middlewares.throttling import rate_limit
 
 
-@rate_limit("stats", rate=5)
+@rate_limit("stats", rate=2)
 async def stats(message: types.Message, session: AsyncSession):
 
     async with session.begin():
@@ -33,7 +33,7 @@ async def stats(message: types.Message, session: AsyncSession):
         await message.answer(html.pre(text), parse_mode="HTML")
 
 
-@rate_limit("stats", rate=5)
+@rate_limit("stats", rate=2)
 async def stats_all(
     message: types.Message, session: AsyncSession, command: CommandObject
 ):
