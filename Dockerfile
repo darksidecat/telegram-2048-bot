@@ -16,7 +16,7 @@ ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
 FROM python-base as builder-base
 RUN apt-get update \
- && apt-get install -y gcc
+ && apt-get install -y gcc git
 
 
 WORKDIR $PYSETUP_PATH

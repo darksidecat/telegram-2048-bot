@@ -2,7 +2,9 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher, F
+from aiogram.client.session.middlewares.request_logging import RequestLogging
 from aiogram.dispatcher.fsm.storage.redis import RedisStorage
+from aiogram.methods import GetUpdates
 from aiogram.types import BotCommand, BotCommandScopeDefault
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
@@ -12,7 +14,7 @@ from bot.db.utils import make_connection_string
 from bot.handlers.game import register_game
 from bot.handlers.stats import register_stats
 from bot.middlewares.db_session import DBSession
-from bot.middlewares.requests_logging import RequestLogging
+from bot.middlewares.throttling import ThrottlingMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -56,9 +58,11 @@ async def main():
     bot = Bot(config.bot.token)
     dp = Dispatcher(storage=storage, isolate_events=True)
 
-    bot.session.middleware(RequestLogging(ignore_get_updates=True))
+    bot.session.middleware(RequestLogging(ignore_methods=[GetUpdates]))
     dp.message.outer_middleware(DBSession(session_fabric))
     dp.callback_query.outer_middleware(DBSession(session_fabric))
+
+    dp.message.middleware(ThrottlingMiddleware())
 
     dp.message.filter(F.chat.type == "private")
     dp.callback_query.filter(F.message.chat.type == "private")

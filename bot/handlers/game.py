@@ -111,7 +111,10 @@ async def move(
         4-5 game size is small messages, 6-7 is bigger messages
         """
         await query.message.answer(
-            text=f"Sorry, bot in Flood Control, please wait {ex.retry_after} seconds or play 4-5 game sizes :("
+            text=(
+                f"Sorry, bot in Flood Control, please wait {ex.retry_after} seconds or play 4-5 game sizes :(\n"
+                f"Be careful, starting a new game will delete the progress in the old one"
+            )
         )
         raise
 
@@ -130,11 +133,7 @@ def register_game(dp: Dispatcher):
     dp.message.register(
         start,
         ContentTypesFilter(content_types="text"),
-        Command(
-            commands={
-                "start",
-            }
-        ),
+        Command(commands=("start",)),
     )
 
     dp.callback_query.register(new_game, GameSizeCD.filter())

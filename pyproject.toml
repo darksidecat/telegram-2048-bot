@@ -6,16 +6,18 @@ authors = ["darksidecat <bitalik371@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-aiogram = {version = "^3.0.0-alpha.17", allow-prereleases = true}
+aiogram = { git="https://github.com/aiogram/aiogram.git",  branch="dev-3.x" }
 SQLAlchemy = "^1.4.25"
 alembic = "^1.7.3"
 aioredis = "^2.0.0"
 asyncpg = "^0.24.0"
+aiolimiter = "^1.0.0-beta.1"
 
 [tool.poetry.dev-dependencies]
 isort = "^5.9.3"
 black = "^21.9b0"
 pytest = "^6.2.5"
+sqlalchemy2-stubs = "^0.0.2-alpha.17"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

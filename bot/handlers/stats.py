@@ -1,15 +1,16 @@
 from typing import List, Optional
 
 from aiogram import Dispatcher, html, types
-from aiogram.dispatcher.filters import (Command, CommandObject,
-                                        ContentTypesFilter)
+from aiogram.dispatcher.filters import Command, CommandObject, ContentTypesFilter
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.db import GameHistoryEntry
 from bot.keyboards.game import GAME_SIZES
+from bot.middlewares.throttling import rate_limit
 
 
+@rate_limit("stats", rate=5)
 async def stats(message: types.Message, session: AsyncSession):
 
     async with session.begin():
@@ -32,6 +33,7 @@ async def stats(message: types.Message, session: AsyncSession):
         await message.answer(html.pre(text), parse_mode="HTML")
 
 
+@rate_limit("stats", rate=5)
 async def stats_all(
     message: types.Message, session: AsyncSession, command: CommandObject
 ):
@@ -79,18 +81,10 @@ def register_stats(dp: Dispatcher):
     dp.message.register(
         stats,
         ContentTypesFilter(content_types="text"),
-        Command(
-            commands={
-                "stats",
-            }
-        ),
+        Command(commands=("stats",)),
     )
     dp.message.register(
         stats_all,
         ContentTypesFilter(content_types="text"),
-        Command(
-            commands={
-                "stats_all",
-            }
-        ),
+        Command(commands=("stats_all",)),
     )
