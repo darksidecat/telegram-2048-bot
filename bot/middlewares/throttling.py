@@ -1,9 +1,10 @@
 import functools
 import inspect
 import logging
-from typing import Any, Awaitable, Callable, Dict
+from typing import Any, Awaitable, Callable, Dict, Optional
 
 from aiogram import BaseMiddleware
+from aiogram.dispatcher.event.handler import HandlerObject
 from aiogram.types import TelegramObject, User
 from aiolimiter import AsyncLimiter
 
@@ -21,9 +22,12 @@ class ThrottlingMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: Dict[str, Any],
     ) -> Any:
-        user: User = data.get("event_from_user")
+        user: Optional[User] = data.get("event_from_user")
         if user:
+            # get the real handler that will be called at the end of chain
             unwrapped_handler = unwrap_handler(handler)
+
+            # get settled by rate_limit decorator attributes from handler
             throttling_key = getattr(unwrapped_handler, "throttling_key", None)
             throttling_rate = getattr(
                 unwrapped_handler, "throttling_rate", self.default_rate
@@ -52,14 +56,16 @@ class ThrottlingMiddleware(BaseMiddleware):
 
 
 def unwrap_handler(handler):
-    if isinstance(handler, functools.partial):
-        handler = inspect.unwrap(handler).args[0]
+    """Get handler callback from middleware/handler chain"""
+    if isinstance(handler, functools.partial):  # if next call is middleware
+        handler = inspect.unwrap(handler).args[0]  # get next call in middleware chain
         return unwrap_handler(handler)
     else:
-        return inspect.unwrap(handler).__self__.callback
+        handler_object: HandlerObject = inspect.unwrap(handler).__self__
+        return handler_object.callback
 
 
-def rate_limit(key=None, rate=5):
+def rate_limit(key: Optional[str] = None, rate: int = 5):
     """Decorator for settling throttling key and rate for handler"""
 
     def decorator(func):
