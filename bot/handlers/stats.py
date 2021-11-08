@@ -41,10 +41,12 @@ async def stats_all(
             game_size = int(command.args[0])
 
     async with session.begin():
+        filter_ = {} if not game_size else {'field_size': game_size}
+        
         query = (
             select(GameHistoryEntry)
-            .filter(
-                True if not game_size else (GameHistoryEntry.field_size == game_size)
+            .filter_by(
+                **filter_
             )
             .order_by(GameHistoryEntry.score.desc())
             .limit(9)
