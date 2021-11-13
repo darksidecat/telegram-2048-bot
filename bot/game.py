@@ -152,8 +152,12 @@ class Game(BaseModel):
             self._up()
         elif direction is Direction.RIGHT:
             self._right()
-        else:
+        elif direction is Direction.DOWN:
             self._down()
+        else:
+            raise TypeError(
+                f"direction must be Direction type not {type(direction).__name__} type"
+            )
 
         if field_copy != self.field:
             self._new_cell()
