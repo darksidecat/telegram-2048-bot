@@ -23,7 +23,7 @@ class ThrottlingMiddleware(BaseMiddleware):
         user: Optional[User] = data.get("event_from_user")
         if user:
             # get the real handler that will be called at the end of chain
-            real_handler: HandlerObject = data.get("handler")
+            real_handler: HandlerObject = data["handler"]
 
             # get settled throttling flags from handler
             throttling_key = real_handler.flags.get("throttling_key", None)

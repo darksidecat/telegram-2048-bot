@@ -48,7 +48,7 @@ class Repo(BaseRepo):
             result = await self.session.execute(query)
             return result.scalars().all()
 
-    async def users_count(self) -> int:
+    async def users_count(self) -> Optional[int]:
         async with self.session.begin():
             query = select(func.count()).select_from(
                 select(models.GameHistoryEntry)

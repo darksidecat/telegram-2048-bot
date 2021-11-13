@@ -2,6 +2,7 @@ from typing import Any, Awaitable, Callable, Dict, Iterable, Type
 
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.services.repository import BaseRepo
 
@@ -18,7 +19,7 @@ class RepoMiddleware(BaseMiddleware):
         data: Dict[str, Any],
     ) -> Any:
 
-        session = data.get(self.session_key)
+        session: AsyncSession = data[self.session_key]
 
         repo_keys = []
         for repo in self.repos:
