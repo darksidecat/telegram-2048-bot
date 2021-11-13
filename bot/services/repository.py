@@ -1,6 +1,6 @@
 import logging
 from abc import ABC
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from sqlalchemy import func, select
