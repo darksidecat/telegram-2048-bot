@@ -10,7 +10,7 @@ from bot.db import models
 logger = logging.getLogger(__name__)
 
 
-RepoType = Union[Type["RepoProtocol"], Callable[[AsyncSession], ...]]
+RepoType = Union[Type["RepoProtocol"], Callable[[AsyncSession], None]]
 
 
 class RepoProtocol(Protocol):
