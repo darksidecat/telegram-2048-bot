@@ -1,13 +1,13 @@
-from typing import Any, Awaitable, Callable, Dict, Iterable, Type
+from typing import Any, Awaitable, Callable, Dict, Iterable
 
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 
-from bot.services.repository import RepoProtocol
+from bot.services.repository import RepoType
 
 
 class RepoMiddleware(BaseMiddleware):
-    def __init__(self, repos: Iterable[Type[RepoProtocol]], session_key: str) -> None:
+    def __init__(self, repos: Iterable[RepoType], session_key: str) -> None:
         self.repos = repos
         self.session_key = session_key
 

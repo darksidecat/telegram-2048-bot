@@ -23,7 +23,7 @@ async def stats(message: types.Message, repo: Repo):
 async def stats_all(message: types.Message, repo: Repo, command: CommandObject):
     game_size = None
     if command.args:
-        if command.args[0] in GAME_SIZES:
+        if command.args[0] in map(str, GAME_SIZES):
             game_size = int(command.args[0])
 
     filters = {} if not game_size else {"field_size": game_size}
