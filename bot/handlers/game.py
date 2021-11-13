@@ -51,6 +51,7 @@ async def new_game(
             score=0,
         ),
     )
+    await repo.commit()
 
 
 async def move(
@@ -121,6 +122,7 @@ async def move(
     await query.answer()
 
     await repo.update_game_score(game_id=game.game_id, new_score=game.score)
+    await repo.commit()
 
 
 def register_game(dp: Dispatcher):
