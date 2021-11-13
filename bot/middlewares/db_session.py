@@ -6,8 +6,9 @@ from sqlalchemy.orm import sessionmaker
 
 
 class DBSession(BaseMiddleware):
-    def __init__(self, sm: sessionmaker) -> None:
+    def __init__(self, sm: sessionmaker, session_key: str) -> None:
         self.session = sm
+        self.session_key = session_key
 
     async def __call__(
         self,
@@ -17,6 +18,9 @@ class DBSession(BaseMiddleware):
     ) -> Any:
 
         async with self.session() as session:
-            data["session"] = session
+            data[self.session_key] = session
 
-            return await handler(event, data)
+            result = await handler(event, data)
+
+            data.pop(self.session_key)
+            return result

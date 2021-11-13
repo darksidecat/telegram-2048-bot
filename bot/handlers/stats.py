@@ -1,26 +1,14 @@
-from typing import List, Optional
-
 from aiogram import Dispatcher, html, types
 from aiogram.dispatcher.filters import (Command, CommandObject,
                                         ContentTypesFilter)
-from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from bot.db import GameHistoryEntry
 from bot.keyboards.game import GAME_SIZES
+from bot.services.repository import Repo
 
 
-async def stats(message: types.Message, session: AsyncSession):
+async def stats(message: types.Message, repo: Repo):
 
-    async with session.begin():
-        query = (
-            select(GameHistoryEntry)
-            .filter_by(telegram_id=message.from_user.id)
-            .order_by(GameHistoryEntry.score.desc())
-            .limit(5)
-        )
-        result = await session.execute(query)
-        top_scores: Optional[List[GameHistoryEntry]] = result.scalars().all()
+    top_scores = await repo.user_top_scores(user_id=message.from_user.id)
 
     if top_scores:
         text = "\n".join(
@@ -32,37 +20,19 @@ async def stats(message: types.Message, session: AsyncSession):
         await message.answer(html.pre(text), parse_mode="HTML")
 
 
-async def stats_all(
-    message: types.Message, session: AsyncSession, command: CommandObject
-):
+async def stats_all(message: types.Message, repo: Repo, command: CommandObject):
     game_size = None
     if command.args:
         if command.args[0] in GAME_SIZES:
             game_size = int(command.args[0])
 
-    async with session.begin():
-        filter_ = {} if not game_size else {'field_size': game_size}
-        
-        query = (
-            select(GameHistoryEntry)
-            .filter_by(
-                **filter_
-            )
-            .order_by(GameHistoryEntry.score.desc())
-            .limit(9)
-        )
-        result = await session.execute(query)
-        top_scores: Optional[List[GameHistoryEntry]] = result.scalars().all()
+    filters = {} if not game_size else {"field_size": game_size}
+    all_users_top_scores = await repo.all_users_top_scores(filters=filters)
+    players = await repo.users_count()
 
-        query = select(func.count()).select_from(
-            select(GameHistoryEntry).distinct(GameHistoryEntry.telegram_id).subquery()
-        )
-        result = await session.execute(query)
-        players = result.scalar()
-
-    if top_scores:
+    if all_users_top_scores:
         top_games = []
-        for i, game in enumerate(top_scores):
+        for i, game in enumerate(all_users_top_scores):
             user = "You" if game.telegram_id == message.from_user.id else "---"
             fields = [
                 i + 1,

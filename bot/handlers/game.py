@@ -1,18 +1,17 @@
 import json
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from aiogram import Dispatcher, types
 from aiogram.dispatcher.filters import Command, ContentTypesFilter
 from aiogram.dispatcher.fsm.context import FSMContext
 from aiogram.exceptions import TelegramRetryAfter
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot import keyboards
 from bot.db import GameHistoryEntry
 from bot.game import Direction, FieldNotModified, Game
 from bot.keyboards.game import GameAction, GameCD, GameSizeCD
+from bot.services.repository import Repo
 from bot.utils import draw_table
 
 
@@ -30,7 +29,7 @@ async def new_game(
     query: types.CallbackQuery,
     state: FSMContext,
     callback_data: GameSizeCD,
-    session: AsyncSession,
+    repo: Repo,
 ):
     game = Game(size=callback_data.size)
     game.start_game()
@@ -43,22 +42,22 @@ async def new_game(
 
     await state.update_data(game=game.json())
 
-    async with session.begin():
-        game_history = GameHistoryEntry(
+    await repo.add_game_history_entry(
+        GameHistoryEntry(
             game_id=game.game_id,
             played_at=datetime.utcnow(),
             telegram_id=query.from_user.id,
             field_size=game.size,
             score=0,
-        )
-        session.add(game_history)
+        ),
+    )
 
 
 async def move(
     query: types.CallbackQuery,
     state: FSMContext,
     callback_data: GameCD,
-    session: AsyncSession,
+    repo: Repo,
 ):
     user_data = await state.get_data()
     game_data = user_data.get("game")
@@ -121,12 +120,7 @@ async def move(
     await state.update_data(game=game.json())
     await query.answer()
 
-    async with session.begin():
-        game_history: Optional[GameHistoryEntry] = await session.get(
-            GameHistoryEntry, game.game_id
-        )
-        if game_history:
-            game_history.score = game.score
+    await repo.update_game_score(game_id=game.game_id, new_score=game.score)
 
 
 def register_game(dp: Dispatcher):
