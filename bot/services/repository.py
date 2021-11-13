@@ -1,5 +1,6 @@
 import logging
-from typing import Any, Callable, Dict, List, Optional, Protocol, Type, Union
+from abc import ABC
+from typing import Any, Callable, Dict, List, Optional
 from uuid import UUID
 
 from sqlalchemy import func, select
@@ -10,18 +11,15 @@ from bot.db import models
 logger = logging.getLogger(__name__)
 
 
-RepoType = Union[Type["RepoProtocol"], Callable[[AsyncSession], None]]
-
-
-class RepoProtocol(Protocol):
+class BaseRepo(ABC):
     repo_key: str
-
-
-class Repo:
-    repo_key = "repo"
 
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
+
+
+class Repo(BaseRepo):
+    repo_key = "repo"
 
     async def add_game_history_entry(self, game_history: models.GameHistoryEntry):
         async with self.session.begin():
