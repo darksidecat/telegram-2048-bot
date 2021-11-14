@@ -15,15 +15,15 @@ class Repo:
         self.repo = repo
 
     def __get__(self, obj, owner: Any) -> T:
-        repo = getattr(obj, self.repo_key)
-        if repo:
+        try:
+            return getattr(obj, self.private_repo_key)
+        except AttributeError:
+            repo = self.repo(obj.session)
+            setattr(obj, self.private_repo_key, repo)
             return repo
-        repo = self.repo(obj.session)
-        setattr(obj, self.repo_key, repo)
-        return repo
 
-    def __set_name__(self, name, owner):
-        self.repo_key = name
+    def __set_name__(self, obj, name):
+        self.private_repo_key = "_" + name
 
 
 class Repos:
