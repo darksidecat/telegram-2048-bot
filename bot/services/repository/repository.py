@@ -15,6 +15,8 @@ class Repo:
         self.repo = repo
 
     def __get__(self, obj, owner: Any) -> T:
+        if obj is None:
+            return self
         try:
             return getattr(obj, self.private_repo_key)
         except AttributeError:
