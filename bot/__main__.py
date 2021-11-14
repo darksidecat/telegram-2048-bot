@@ -14,7 +14,6 @@ from bot.db.utils import make_connection_string
 from bot.handlers.game import register_game
 from bot.handlers.stats import register_stats
 from bot.middlewares import DBSession, RepoMiddleware, ThrottlingMiddleware
-from bot.services.repository import Repo
 
 logger = logging.getLogger(__name__)
 
@@ -68,8 +67,8 @@ async def main():
         DBSession(session_fabric, session_key=session_key)
     )
 
-    dp.message.outer_middleware(RepoMiddleware((Repo,), session_key=session_key))
-    dp.callback_query.outer_middleware(RepoMiddleware((Repo,), session_key=session_key))
+    dp.message.outer_middleware(RepoMiddleware(session_key=session_key))
+    dp.callback_query.outer_middleware(RepoMiddleware(session_key=session_key))
 
     dp.message.filter(F.chat.type == "private")
     dp.callback_query.filter(F.message.chat.type == "private")

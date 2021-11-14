@@ -1,32 +1,16 @@
 import logging
-from abc import ABC
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.db import models
+from bot.services.repository.base_repository import BaseRepo
 
 logger = logging.getLogger(__name__)
 
 
-class BaseRepo(ABC):
-    repo_key: str
-
-    def __init__(self, session: AsyncSession) -> None:
-        self.session = session
-
-    async def commit(self):
-        await self.session.commit()
-
-    async def rollback(self):
-        await self.session.rollback()
-
-
-class Repo(BaseRepo):
-    repo_key = "repo"
-
+class GameRepo(BaseRepo):
     async def add_game_history_entry(self, game_history: models.GameHistoryEntry):
         self.session.add(game_history)
 
