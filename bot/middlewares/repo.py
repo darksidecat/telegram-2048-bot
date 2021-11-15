@@ -4,7 +4,7 @@ from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from bot.services.repository import Repos
+from bot.services.repository import SQLAlchemyRepos
 
 REPO_KEY = "repo"
 
@@ -21,7 +21,7 @@ class RepoMiddleware(BaseMiddleware):
     ) -> Any:
 
         session: AsyncSession = data[self.session_key]
-        data[REPO_KEY] = Repos(session)
+        data[REPO_KEY] = SQLAlchemyRepos(session)
 
         result = await handler(event, data)
 

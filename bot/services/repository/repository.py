@@ -1,41 +1,26 @@
 import logging
-from typing import Any, Type, TypeVar
+from functools import lru_cache
+from typing import Type, TypeVar
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from bot.services.repository.game_repository import GameRepo
+from bot.services.repository.base_repository import BaseSQLAlchemyRepo
 
 logger = logging.getLogger(__name__)
 
-T = TypeVar("T")
+T = TypeVar("T", bound=BaseSQLAlchemyRepo)
 
 
-class Repo:
-    def __init__(self, repo: Type[T]):
-        self.repo = repo
-
-    def __get__(self, obj, owner: Any) -> T:
-        if obj is None:
-            return self
-        try:
-            return getattr(obj, self.private_repo_key)
-        except AttributeError:
-            repo = self.repo(obj.session)
-            setattr(obj, self.private_repo_key, repo)
-            return repo
-
-    def __set_name__(self, obj, name):
-        self.private_repo_key = "_" + name
-
-
-class Repos:
-    game = Repo(GameRepo)
-
+class SQLAlchemyRepos:
     def __init__(self, session: AsyncSession):
-        self.session = session
+        self._session = session
+
+    @lru_cache()  # @cache usage break typehints :(
+    def get_repo(self, repo: Type[T]) -> T:
+        return repo(self._session)
 
     async def commit(self):
-        await self.session.commit()
+        await self._session.commit()
 
     async def rollback(self):
-        await self.session.rollback()
+        await self._session.rollback()

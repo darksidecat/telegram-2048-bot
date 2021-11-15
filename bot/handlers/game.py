@@ -11,7 +11,7 @@ from bot import keyboards
 from bot.db import GameHistoryEntry
 from bot.game import Direction, FieldNotModified, Game
 from bot.keyboards.game import GameAction, GameCD, GameSizeCD
-from bot.services.repository import Repos
+from bot.services.repository import GameRepo, SQLAlchemyRepos
 from bot.utils import draw_table
 
 
@@ -29,7 +29,7 @@ async def new_game(
     query: types.CallbackQuery,
     state: FSMContext,
     callback_data: GameSizeCD,
-    repo: Repos,
+    repo: SQLAlchemyRepos,
 ):
     game = Game(size=callback_data.size)
     game.start_game()
@@ -42,7 +42,7 @@ async def new_game(
 
     await state.update_data(game=game.json())
 
-    await repo.game.add_game_history_entry(
+    await repo.get_repo(GameRepo).add_game_history_entry(
         GameHistoryEntry(
             game_id=game.game_id,
             played_at=datetime.utcnow(),
@@ -58,7 +58,7 @@ async def move(
     query: types.CallbackQuery,
     state: FSMContext,
     callback_data: GameCD,
-    repo: Repos,
+    repo: SQLAlchemyRepos,
 ):
     user_data = await state.get_data()
     game_data = user_data.get("game")
@@ -121,7 +121,9 @@ async def move(
     await state.update_data(game=game.json())
     await query.answer()
 
-    await repo.game.update_game_score(game_id=game.game_id, new_score=game.score)
+    await repo.get_repo(GameRepo).update_game_score(
+        game_id=game.game_id, new_score=game.score
+    )
     await repo.commit()
 
 
@@ -131,7 +133,5 @@ def register_game(dp: Dispatcher):
         ContentTypesFilter(content_types="text"),
         Command(commands=("start",)),
     )
-
     dp.callback_query.register(new_game, GameSizeCD.filter())
-
     dp.callback_query.register(move, GameCD.filter())

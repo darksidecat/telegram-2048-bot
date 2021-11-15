@@ -3,12 +3,14 @@ from aiogram.dispatcher.filters import (Command, CommandObject,
                                         ContentTypesFilter)
 
 from bot.keyboards.game import GAME_SIZES
-from bot.services.repository import Repos
+from bot.services.repository import GameRepo, SQLAlchemyRepos
 
 
-async def stats(message: types.Message, repo: Repos):
+async def stats(message: types.Message, repo: SQLAlchemyRepos):
 
-    top_scores = await repo.game.user_top_scores(user_id=message.from_user.id)
+    top_scores = await repo.get_repo(GameRepo).user_top_scores(
+        user_id=message.from_user.id
+    )
 
     if top_scores:
         text = "\n".join(
@@ -20,15 +22,19 @@ async def stats(message: types.Message, repo: Repos):
         await message.answer(html.pre(text), parse_mode="HTML")
 
 
-async def stats_all(message: types.Message, repo: Repos, command: CommandObject):
+async def stats_all(
+    message: types.Message, repo: SQLAlchemyRepos, command: CommandObject
+):
     game_size = None
     if command.args:
         if command.args[0] in map(str, GAME_SIZES):
             game_size = int(command.args[0])
 
     filters = {} if not game_size else {"field_size": game_size}
-    all_users_top_scores = await repo.game.all_users_top_scores(filters=filters)
-    players = await repo.game.users_count()
+    all_users_top_scores = await repo.get_repo(GameRepo).all_users_top_scores(
+        filters=filters
+    )
+    players = await repo.get_repo(GameRepo).users_count()
 
     if all_users_top_scores:
         top_games = []
