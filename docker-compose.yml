@@ -20,6 +20,8 @@ services:
             VOLUMES_DIR: ${VOLUMES_DIR}
         volumes:
             - "~/${VOLUMES_DIR}/pg-data:/var/lib/postgresql/data"
+        ports:
+            - "5555:5432"
     db_migration:
         build: .
         restart: "on-failure"
