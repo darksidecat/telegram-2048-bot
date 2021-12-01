@@ -1,5 +1,6 @@
 # 2048 Bot
 
+<a href="https://t.me/another_2048_bot"><img src="https://img.shields.io/badge/Telegram-%40another__2048__bot-blue"></a>  
 
 The creation of this bot is inspired by [@MasterGroosha](https://github.com/MasterGroosha) [telegram-bombsweeper-bot](https://github.com/MasterGroosha/telegram-bombsweeper-bot)
 
