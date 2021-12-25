@@ -6,7 +6,7 @@ authors = ["darksidecat <bitalik371@gmail.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-aiogram = { git="https://github.com/aiogram/aiogram.git",  branch="dev-3.x" }
+aiogram = { version="3.0.0b1",  allow-prereleases = true }
 SQLAlchemy = "^1.4.25"
 alembic = "^1.7.3"
 aioredis = "^2.0.0"
