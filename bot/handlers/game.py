@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import datetime
 from uuid import UUID
 
@@ -13,6 +14,8 @@ from bot.game import Direction, FieldNotModified, Game
 from bot.keyboards.game import GameAction, GameCD, GameSizeCD
 from bot.services.repository import GameRepo, SQLAlchemyRepos
 from bot.utils import draw_table
+
+logger = logging.getLogger(__name__)
 
 
 def render_field(game: Game):
@@ -102,7 +105,7 @@ async def move(
             reply_markup=keyboards.game.game_buttons(game.game_id),
             parse_mode="HTML",
         )
-    except TelegramRetryAfter as ex:
+    except TelegramRetryAfter as err:
         """
         There is limits for editing messages in chat
         - small messages (<512 bytes) >200 edits in minute
@@ -112,11 +115,12 @@ async def move(
         """
         await query.message.answer(
             text=(
-                f"Sorry, bot in Flood Control, please wait {ex.retry_after} seconds or play 4-5 game sizes :(\n"
+                f"Sorry, bot in Flood Control, please wait {err.retry_after} seconds or play 4-5 game sizes :(\n"
                 f"Be careful, starting a new game will delete the progress in the old one"
             )
         )
-        raise
+        logger.warning(err)
+        return
 
     await state.update_data(game=game.json())
     await query.answer()
