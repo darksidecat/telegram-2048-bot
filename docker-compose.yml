@@ -10,6 +10,8 @@ services:
             - "~/${VOLUMES_DIR}/redis-config:/usr/local/etc/redis"
             - "~/${VOLUMES_DIR}/redis-data:/data"
         command: "redis-server /usr/local/etc/redis/redis.conf"
+        ports:
+            - "5554:6379"
     db:
         image: postgres:13-alpine
         restart: "unless-stopped"
