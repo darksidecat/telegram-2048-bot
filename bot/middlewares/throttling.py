@@ -21,33 +21,28 @@ class ThrottlingMiddleware(BaseMiddleware):
         data: Dict[str, Any],
     ) -> Any:
         user: Optional[User] = data.get("event_from_user")
-        if user:
-            # get the real handler that will be called at the end of chain
-            real_handler: HandlerObject = data["handler"]
 
-            # get settled throttling flags from handler
-            throttling_key = real_handler.flags.get("throttling_key", None)
-            throttling_rate = real_handler.flags.get(
-                "throttling_rate", self.default_rate
-            )
+        # get the real handler that will be called at the end of chain
+        real_handler: HandlerObject = data["handler"]
 
-            if throttling_key:
-                limiter = self.limiters.setdefault(
-                    f"{user.id}:{throttling_key}", AsyncLimiter(1, throttling_rate)
-                )
+        # get settled throttling flags from handler
+        throttling_key = real_handler.flags.get("throttling_key", None)
+        throttling_rate = real_handler.flags.get("throttling_rate", self.default_rate)
 
-                if limiter.has_capacity():
-                    async with limiter:
-                        return await handler(event, data)
-                else:
-                    logger.info(
-                        "Throttled for user=%d, key=%s, rate=%d",
-                        user.id,
-                        throttling_key,
-                        throttling_rate,
-                    )
-            else:
-                return await handler(event, data)
-
-        else:
+        if not throttling_key or not user:
             return await handler(event, data)
+
+        limiter = self.limiters.setdefault(
+            f"{user.id}:{throttling_key}", AsyncLimiter(1, throttling_rate)
+        )
+
+        if limiter.has_capacity():
+            async with limiter:
+                return await handler(event, data)
+        else:
+            logger.info(
+                "Throttled for user=%d, key=%s, rate=%d",
+                user.id,
+                throttling_key,
+                throttling_rate,
+            )
